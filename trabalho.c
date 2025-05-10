@@ -2,11 +2,29 @@
 #include<stdlib.h>
 #include<math.h>
 
-struct no{
+typedef struct no{
     float x;
     float y;
     float z;
 }No;
+
+typedef struct dadosSaida{
+    float maxDE;
+    struct no maxDE_1;
+    struct no maxDE_2;
+
+    float minDE;
+    struct no minDE_1;
+    struct no minDE_2;
+
+    float maxDEN;
+    struct no maxDEN_1;
+    struct no maxDEN_2;
+
+    float minDEN; 
+    struct no minDEN_1;
+    struct no minDEN_2;
+}Dados_saida;
 
 // Funcoes secundarias
 void limpaTela(){
@@ -24,13 +42,13 @@ void limpaBuffer(){
 
 void entrada(int ini, int fim, int *num){
     while (scanf("%i", num) != 1 && *num < ini && *num > fim){
-        printf("Número inválido. Digite um número dentro do intervalo [%i, %i]: " ini, fim);
+        printf("Número inválido. Digite um número dentro do intervalo [%i, %i]: ", ini, fim);
         limpaBuffer(); 
     }
 }
 
 int alocaVertices(struct no **vertices, int alocar){
-    (*vercices) = realloc(*vertices, sizeof(No) * alocar);
+    (*vertices) = realloc(*vertices, sizeof(No) * alocar);
 
     if (*vertices == NULL) {
         printf("Erro ao alocar memória. Aperte enter para voltar.");
@@ -43,15 +61,11 @@ int alocaVertices(struct no **vertices, int alocar){
 }
 
 double calculaDE(struct no A, struct no B){
-    return sqrt(
-        pow(A.x - B.x, 2) +
-        pow(A.y - B.y, 2) +
-        pow(A.z - B.z, 2)
-    );
+    return sqrt(pow(A.x - B.x, 2) + pow(A.y - B.y, 2) + pow(A.z - B.z, 2));
 }
 
-float normalizaDE(float *x, float min, float max){
-    return (*x - min)/(max - min);
+float normalizaDE(float x, float min, float max){
+    return (x - min)/(max - min);
 }
 
 // Funcoes primarias
@@ -81,7 +95,7 @@ int carregaArquivo(struct no **vertices, int *qtAlocada, int *totalVertices, cha
 
             (*totalVertices)++;
         }else{
-            pritf("Linha %d inválida. Aperte enter para voltar. ", *totalVertices+1);
+            printf("Linha %d inválida. Aperte enter para voltar. ", *totalVertices+1);
             limpaBuffer();
             getchar();
             return 0;
@@ -92,71 +106,81 @@ int carregaArquivo(struct no **vertices, int *qtAlocada, int *totalVertices, cha
     return 1;
 }
 
-int criaGrafo(struct no **vertices, int qtVertices){
+int criaGrafo(No *vertices, int qtVertices, struct dadosSaida *saida, int matrizADJ[][qtVertices]){
     float matrizDE[qtVertices][qtVertices];
-    int matrizADJ[qtVertices][qtVertices];
 
-    float minDE, maxDE, aux, minDEN, maxDEN;
-    No maxDE1, maxDE2, minDE1, minDE2, maxDEN1, maxDEN2, minDEN1, minDEN2;
+    float aux;
 
-    int qtConexos = 0; //aqui falta respectivos tamanhos, vou ter que rodar uma BFS e DFS;
+    if(qtVertices <= 0 || vertices == NULL || saida == NULL) return 0;
 
     for (int i = 0; i < qtVertices; i++){
         for (int j = 0; j < qtVertices; j++){
-            aux = calculaDE((*vertices)[i], *(vercices)[j]);
+            aux = calculaDE(vertices[i], vertices[j]);
             matrizDE[i][j] = aux;
 
-            if ((i = 0 && j == 0) || aux < minDE) {
-                minDE = aux;
-                minDE1 = (*vercices)[i];
-                minDE2 = (*vertice)[j];
+            if ((i == 0 && j == 0) || aux < (*saida).minDE) {
+                (*saida).minDE = aux;
+                (*saida).minDE_1 = vertices[i];
+                (*saida).minDE_2 = vertices[j];
             }
-            if ((i = 0 && j == 0) || aux > maxDE) {
-                maxDE = aux;
-                maxDE1 = (*vercices)[i];
-                maxDE2 = (*vertice)[j];
+            if ((i == 0 && j == 0) || aux > (*saida).maxDE) {
+                (*saida).maxDE = aux;
+                (*saida).maxDE_1 = vertices[i];
+                (*saida).maxDE_2 = vertices[j];
             }
         }
     }
 
     for (int i = 0; i < qtVertices; i++){
         for (int j = 0; j < qtVertices; j++){
-            aux = normalizaDE(matrizDE[i][j], minDE, maxDE)
+            aux = normalizaDE(matrizDE[i][j], (*saida).minDE, (*saida).maxDE);
             if (aux <= 0.3) {
                 matrizADJ[i][j] = 1;
+                
             }
             else matrizADJ[i][j] = 0;
 
-            if ((i = 0 && j == 0) || aux < minDEN) {
-                minDEN = aux;
-                minDEN1 = (*vercices)[i];
-                minDEN2 = (*vertice)[j];
+            if ((i == 0 && j == 0) || aux < (*saida).minDEN) {
+                (*saida).minDEN = aux;
+                (*saida).minDEN_1 = vertices[i];
+                (*saida).minDEN_2 = vertices[j];
             }
-            if ((i = 0 && j == 0) || aux > maxDEN) {
-                maxDEN = aux;
-                maxDEN1 = (*vercices)[i];
-                maxDEN2 = (*vertice)[j];
+            if ((i == 0 && j == 0) || aux > (*saida).maxDEN) {
+                (*saida).maxDEN = aux;
+                (*saida).maxDEN_1 = vertices[i];
+                (*saida).maxDEN_2 = vertices[j];
             }
         }
     }  
+
+    return 1;
 }
 
 
+int salvarArquivo(struct dadosSaida saida, int qtVertices, int matrizADJ[][qtVertices]){
+    FILE *arquivo_saida = fopen("Grafo.csv", "w");
+    FILE *arquivo_saida_python = fopen("Grafo_python.csv", "w");
 
-/*
-void salvaArquivo(){
+    if (arquivo_saida == NULL || arquivo_saida_python == NULL){
+        printf("Erro ao criar arquivos de saida. Aperte enter para voltar.");
+        limpaBuffer();
+        getchar();
+        return 0;
+    }
+
+
 
 }
-
-*/
-
 
 int main(){
     limpaTela();
 
-    int totalVertices = 0, qtAlocada = 10;
+
+    int qtVertices = 0, qtAlocada = 10, continuar = 1;
     char nomeArquivo[100];
     No *vertices = NULL;
+
+    Dados_saida saida;
 
     printf("Digite o nome do arquivo de dados: ");
     scanf("%[^\n]", nomeArquivo);
@@ -164,17 +188,41 @@ int main(){
 
     alocaVertices(&vertices, qtAlocada);
 
-    if(carregaArquivo(&vertice, &totalVertices, &qtAlocada, nomeArquivo)){
+    if(carregaArquivo(&vertices, &qtVertices, &qtAlocada, nomeArquivo)){
         printf("\nVertices carregados com sucesso.\n");
     }else{
         printf("\nErro ao carregar o arquivo.\n");
     }
 
+    int matrizADJ[qtVertices][qtVertices];
     
+    if(criaGrafo(vertices, qtVertices, &saida, matrizADJ)){
+        printf("\nGrafo criado com sucesso.");
+    }else {
+        printf("\nErro ao criar o grafo.");
+    }
 
-    //salvaArquivo(nomeArquivo);
+    if(salvarArquivo(saida, qtVertices, matrizADJ)){
+        printf("\nGrafo e demais dados salvos nos arquivos de saída.\n");
+    }else{
+        printf("\nErro ao salvar grafo e demais dados no arquivo de saída.\n");
+    }
+
+
+    while (continuar){
+        limpaTela();
+        switch (opcao){
+            case 1:
+                carregaArquivo()
+            break;
+            case 2:
+            break;
+            case 3;
+            continuar = 0;
+            break;
+        }
+    }
 
     free(vertices);
-    limpaTela();
     return 0;
 }
