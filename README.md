@@ -10,9 +10,11 @@ Este repositório contém a implementação de um sistema para processamento e a
 - Determinar pares de vértices com DEN <= 0.3
 - Alocar e manipular estruturas dinâmicas como listas e matrizes
 
-## 📥 Estruturas Principais
+## 📥 Entradas do sistema
 
-- Arquivo .csv onde cada linha representa um vértice com índice e coordenadas (x, y, z)
+- Arquivo .csv onde cada linha representa um vértice com índice e coordenadas (x, y, z) 
+
+## 🛠️ Funcionalidades
 
 ### 🔹 Funções Principais
 
