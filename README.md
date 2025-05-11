@@ -14,6 +14,35 @@ Este repositório contém a implementação de um sistema para processamento e a
 
 - Arquivo .csv onde cada linha representa um vértice com índice e coordenadas (x, y, z) 
 
+## 🧱 Estruturas de Dados
+
+No programa, são usadas duas estruturas principais para representar os vértices do grafo e as informações calculadas durante a construção do grafo: `No` e `Info_grafo`.
+
+### 🔸 `No`
+
+A estrutura `No` representa um vértice no grafo, que é um ponto no espaço tridimensional. Cada vértice possui um identificador único e suas coordenadas espaciais.
+
+```c
+typedef struct no {
+    int indice;  // Identificador único do vértice.
+    float x, y, z;  // Coordenadas do vértice no espaço 3D.
+} No;
+```
+
+### 🔸 `Info_grafo`
+A estrutura `Info_grafo` armazena informaçõe relacionadas ao grafo como um todo. Ela guarda métricas sobre as distâncias entre os vértices, tanto as distâncias Euclidianas quanto as distâncias Euclidianas normalizadas, e também os pares de vértices que determinam esses valores extremos.
+
+```c
+typedef struct info_grafo {
+    int totalVertices;  // Número total de vértices no grafo.
+    float maxDE, minDE, maxDEN, minDEN;  // Maior e menor distância Euclidiana e Normalizada.
+    struct no maxDE_1, maxDE_2;  // Vértices que determinam a maior distância Euclidiana.
+    struct no minDE_1, minDE_2;  // Vértices que determinam a menor distância Euclidiana.
+    struct no maxDEN_1, maxDEN_2;  // Vértices que determinam a maior distância Normalizada.
+    struct no minDEN_1, minDEN_2;  // Vértices que determinam a menor distância Normalizada.
+} Info_grafo;
+```
+
 ## 🛠️ Funcionalidades
 
 ### 🔹 Funções Principais
@@ -99,4 +128,4 @@ Estas funções oferecem suporte essencial à lógica principal do sistema:
 ## 📄 Arquivo-fonte
 
 O código completo do projeto está disponível no GitHub:  
-[https://github.com/RianValcanaia/TC_Classificacao_de_Arquivos](https://github.com/RianValcanaia/TC1_TEG)
+[https://github.com/RianValcanaia/TC1_TEG](https://github.com/RianValcanaia/TC1_TEG)
