@@ -56,13 +56,12 @@ Estas funções representam os **processos centrais** do programa:
     Cria um grafo não-direcionado a partir de um conjunto de vértices, com base na distância euclidiana entre eles.
 
 - `salvaGrafo()`
-    Salva as informações do grafo em três arquivos diferentes: 
-    - Grafo.csv: grafo que é possível fazer a leitura no sistema;
-    - Grafo_estruturado.csv: para leitura humana, apresenta informações com dados;
-    - Grafo_python.txt: para script de geração 3D de grafos em Python.
+    Salva as informações do grafo em um arquivo : 
+    - Grafo.csv: grafo que é possível fazer a leitura no sistema, bem como possui uma estrutura bem clara para leitura do usuário.
+
 - `carregaGrafo()`
     Lê um grafo salvo em arquivo .csv, reconstruindo as informações estruturais e a matriz de adjacência.
-    ❗ obs: esta função só carrega um grafo se o grafo possuir a saída gerada por este sistema, use aqui o arquivo gerado Grafo.csv 
+    ❗ obs: esta função só carrega um grafo se o grafo possuir a saída gerada por este sistema, use aqui o arquivo gerado Grafo.csv.
 
 ### 🔸 Funções Secundárias
 
@@ -91,13 +90,7 @@ Estas funções oferecem suporte essencial à lógica principal do sistema:
 
 - `liberaMatriz(int **matriz, int tam)`
     Libera a memória de uma matriz quadrada alocada dinamicamente.
-
-- `removePasta(const char *caminho)`
-    Remove uma pasta e todos os arquivos contidos nela.
-
-- `criaPasta(const char* caminho)`
-    Cria uma nova pasta, removendo a anterior se já existir.
-
+    
 
 ## 📊 Exemplo de Execução
 
