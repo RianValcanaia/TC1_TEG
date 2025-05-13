@@ -50,7 +50,7 @@ typedef struct info_grafo {
 Estas funções representam os **processos centrais** do programa:
 
 - `carregaArquivo()`
-    Lê um arquivo texto contendo vértices no formato x,y,z e armazena em um vetor dinâmico de estruturas no.  
+    Lê um arquivo.csv contendo vértices no formato x,y,z e armazena em um vetor dinâmico de estruturas no.  
 
 - `criaGrafo()`
     Cria um grafo não-direcionado a partir de um conjunto de vértices, com base na distância euclidiana entre eles.
