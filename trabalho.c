@@ -85,34 +85,6 @@ void liberaMatriz(int **matriz, int tam){
     free(matriz);
 }
 
-void removePasta(const char *caminho){
-    DIR* d = opendir(caminho);
-    struct dirent* dir;
-    char filepath[512];
-
-    if (!d) return;
-
-    while ((dir = readdir(d)) != NULL) {
-        if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0) continue;
-
-        snprintf(filepath, sizeof(filepath), "%s/%s", caminho, dir->d_name);
-        remove(filepath);
-    }
-
-    closedir(d);
-    rmdir(caminho);
-}
-
-void criaPasta(const char* caminho) {
-    struct stat st = {0};
-
-    if (stat(caminho, &st) == 0) {
-        removePasta(caminho);
-    }
-
-    mkdir(caminho, 0777);
-}
-
 // FUNCOES PRIMÁRIAS
 int carregaArquivo(struct no **vertices, int *qtAlocada, int *totalVertices, char nomeArquivo[100]){
     FILE *arquivo = fopen(nomeArquivo, "r");
@@ -225,13 +197,9 @@ int criaGrafo(No *vertices, int qtVertices, struct info_grafo *infos, int ***mat
 }
 
 int salvaGrafo(struct info_grafo infos, int qtVertices, int **matrizADJ, struct no *vertices){
-    criaPasta("Arquivos");
+    FILE *arquivo_saida = fopen("Grafo.csv", "w");
 
-    FILE *arquivo_saida = fopen("Arquivos/Grafo.csv", "w");
-    FILE *arquivo_saida_python = fopen("Arquivos/Grafo_python.txt", "w");
-    FILE *arquivo_saida_estruturado = fopen("Arquivos/Grafo_estruturado.csv", "w"); 
-
-    if (arquivo_saida == NULL || arquivo_saida_python == NULL || arquivo_saida_estruturado == NULL){
+    if (arquivo_saida == NULL){
         printf("\n\u274C Erro ao criar arquivos de saida. Aperte enter para voltar.");
         getchar();
         return 0;
@@ -243,78 +211,35 @@ int salvaGrafo(struct info_grafo infos, int qtVertices, int **matrizADJ, struct 
         getchar();
         return 0;
     }
-/*
-    a) O total de vértices lidos;  ok
-    b) A maior DE e o par de vértices (vi vj) que a determinaram;  ok
-    c) A menor DE e o par de vértices (vi vj) que a determinaram;  ok
-    d) A maior DEN e o par de vértices (vi vj) que a determinaram;  ok
-    e) A menor DEN e o par de vértices (vi vj) que a determinaram;  ok
-    f) Quantos componentes conexos e respectivos tamanhos (quantidades de vértices);
-*/
 
-    //GERA ARQUIVO ESTRUTURADO, COM DETALHES DOS DADOS
-    fprintf(arquivo_saida_estruturado, "Total de vértices lidos, %i\n", infos.totalVertices);  //a)
+    //GERA ARQUIVO PARA POSTERIOR LEITURA DO SISTEMA 
+    fprintf(arquivo_saida, "Total de vértices lidos, %i\n", infos.totalVertices);  //a)
 
-    fprintf(arquivo_saida_estruturado, "Maior distância euclidiana, %f\n", infos.maxDE); // b)
-    fprintf(arquivo_saida_estruturado, "Par de maior distância euclidiana, \"[%i](%.1f,%.1f,%.1f)\", \"[%i](%.1f,%.1f,%.1f)\"\n", infos.maxDE_1.indice, infos.maxDE_1.x, infos.maxDE_1.y, infos.maxDE_1.z, infos.maxDE_2.indice, infos.maxDE_2.x, infos.maxDE_2.y, infos.maxDE_2.z);
+    fprintf(arquivo_saida, "Maior distância euclidiana, %f\n", infos.maxDE); // b)
+    fprintf(arquivo_saida, "Par de maior distância euclidiana, \"[%i](%.1f, %.1f, %.1f) - [%i](%.1f, %.1f, %.1f)\"\n", infos.maxDE_1.indice, infos.maxDE_1.x, infos.maxDE_1.y, infos.maxDE_1.z, infos.maxDE_2.indice, infos.maxDE_2.x, infos.maxDE_2.y, infos.maxDE_2.z);
 
-    fprintf(arquivo_saida_estruturado, "Menor distância euclidiana, %.1f\n", infos.minDE); //c)
-    fprintf(arquivo_saida_estruturado, "Par de menor distância euclidiana, \"[%i](%.1f,%.1f,%.1f)\", \"[%i](%.1f,%.1f,%.1f)\"\n", infos.minDE_1.indice, infos.minDE_1.x, infos.minDE_1.y, infos.minDE_1.z, infos.minDE_2.indice, infos.minDE_2.x, infos.minDE_2.y, infos.minDE_2.z);
+    fprintf(arquivo_saida, "Menor distância euclidiana, %f\n", infos.minDE); //c)
+    fprintf(arquivo_saida, "Par de menor distância euclidiana, \"[%i](%.1f, %.1f, %.1f) - [%i](%.1f, %.1f, %.1f)\"\n", infos.minDE_1.indice, infos.minDE_1.x, infos.minDE_1.y, infos.minDE_1.z, infos.minDE_2.indice, infos.minDE_2.x, infos.minDE_2.y, infos.minDE_2.z);
 
-    fprintf(arquivo_saida_estruturado, "Maior distância euclidiana normalizada, %.1f\n", infos.maxDEN);  //d)
-    fprintf(arquivo_saida_estruturado, "Par de maior distância euclidiana normalizada, \"[%i](%.1f,%.1f,%.1f)\", \"[%i](%.1f,%.1f,%.1f)\"\n", infos.maxDEN_1.indice, infos.maxDEN_1.x, infos.maxDEN_1.y, infos.maxDEN_1.z, infos.maxDEN_2.indice, infos.maxDEN_2.x, infos.maxDEN_2.y, infos.maxDEN_2.z);
+    fprintf(arquivo_saida, "Maior distância euclidiana normalizada, %f\n", infos.maxDEN);  //d)
+    fprintf(arquivo_saida, "Par de maior distância euclidiana normalizada, \"[%i](%.1f, %.1f, %.1f) - [%i](%.1f, %.1f, %.1f)\"\n", infos.maxDEN_1.indice, infos.maxDEN_1.x, infos.maxDEN_1.y, infos.maxDEN_1.z, infos.maxDEN_2.indice, infos.maxDEN_2.x, infos.maxDEN_2.y, infos.maxDEN_2.z);
 
-    fprintf(arquivo_saida_estruturado, "Menor distância euclidiana normalizada, %.1f\n", infos.minDEN);  //e)
-    fprintf(arquivo_saida_estruturado, "Par de menor distância euclidiana normalizada, \"[%i](%.1f,%.1f,%.1f)\", \"[%i](%.1f,%.1f,%.1f)\"\n", infos.minDEN_1.indice, infos.minDEN_1.x, infos.minDEN_1.y, infos.minDEN_1.z, infos.minDEN_2.indice, infos.minDEN_2.x, infos.minDEN_2.y, infos.minDEN_2.z);
-
-    //GERA ARQUIVO PARA POSTERIOR LEITURA DO SISTEMA
-    fprintf(arquivo_saida, "%i\n", infos.totalVertices);  //a)
-
-    fprintf(arquivo_saida, "%f\n", infos.maxDE); // b)
-    fprintf(arquivo_saida, "%i, %.1f, %.1f, %.1f, %i, %.1f, %.1f, %.1f\n", infos.maxDE_1.indice, infos.maxDE_1.x, infos.maxDE_1.y, infos.maxDE_1.z, infos.maxDE_2.indice, infos.maxDE_2.x, infos.maxDE_2.y, infos.maxDE_2.z);
-
-    fprintf(arquivo_saida, "%.1f\n", infos.minDE); //c)
-    fprintf(arquivo_saida, "%i, %.1f, %.1f, %.1f, %i, %.1f, %.1f, %.1f\n", infos.minDE_1.indice, infos.minDE_1.x, infos.minDE_1.y, infos.minDE_1.z, infos.minDE_2.indice, infos.minDE_2.x, infos.minDE_2.y, infos.minDE_2.z);
-
-    fprintf(arquivo_saida, "%.1f\n", infos.maxDEN);  //d)
-    fprintf(arquivo_saida, "%i, %.1f, %.1f, %.1f, %i, %.1f, %.1f, %.1f\n", infos.maxDEN_1.indice, infos.maxDEN_1.x, infos.maxDEN_1.y, infos.maxDEN_1.z, infos.maxDEN_2.indice, infos.maxDEN_2.x, infos.maxDEN_2.y, infos.maxDEN_2.z);
-
-    fprintf(arquivo_saida, "%.1f\n", infos.minDEN);  //e)
-    fprintf(arquivo_saida, "%i, %.1f, %.1f, %.1f, %i, %.1f, %.1f, %.1f\n", infos.minDEN_1.indice, infos.minDEN_1.x, infos.minDEN_1.y, infos.minDEN_1.z, infos.minDEN_2.indice, infos.minDEN_2.x, infos.minDEN_2.y, infos.minDEN_2.z);
+    fprintf(arquivo_saida, "Menor distância euclidiana normalizada, %f\n", infos.minDEN);  //e)
+    fprintf(arquivo_saida, "Par de menor distância euclidiana normalizada, \"[%i](%.1f, %.1f, %.1f) - [%i](%.1f, %.1f, %.1f)\"\n", infos.minDEN_1.indice, infos.minDEN_1.x, infos.minDEN_1.y, infos.minDEN_1.z, infos.minDEN_2.indice, infos.minDEN_2.x, infos.minDEN_2.y, infos.minDEN_2.z);
     
-    // PRINTA MATRIZ DE ADJACÊNCIA
-    fprintf(arquivo_saida_estruturado, "\n\n");
-    fprintf(arquivo_saida_estruturado, "MATRIZ DE ADJACÊNCIA\n");
-
-    fprintf(arquivo_saida_estruturado, ","); // canto superior esquerdo vazio
-
+    // PRINTA ARESTAS
     for (int i = 0; i < qtVertices; i++) {
-        fprintf(arquivo_saida_estruturado, "\"(%.1f,%.1f,%.1f)\"", vertices[i].x, vertices[i].y, vertices[i].z);
-        if (i < qtVertices - 1) fprintf(arquivo_saida_estruturado, ",");
-    }
-    fprintf(arquivo_saida_estruturado, "\n");
-
-    for (int i = 0; i < qtVertices; i++) {
-        fprintf(arquivo_saida_estruturado, "\"(%.1f,%.1f,%.1f)\"", vertices[i].x, vertices[i].y, vertices[i].z);
-    
         for (int j = 0; j < qtVertices; j++) {
-            fprintf(arquivo_saida_estruturado, ",%d", matrizADJ[i][j]);
-            fprintf(arquivo_saida, "%d", matrizADJ[i][j]);
-            if (j< qtVertices-1) fprintf(arquivo_saida, ",");
-
-            if (matrizADJ[i][j] == 1 && i < j) fprintf(arquivo_saida_python, "%i %i\n", i+1, j+1); 
+            if (matrizADJ[i][j] == 1 && i < j) fprintf(arquivo_saida, "%i %i\n", i, j); 
         }
-        fprintf(arquivo_saida_estruturado, "\n");
-        fprintf(arquivo_saida, "\n");
     }
     
-    fclose(arquivo_saida_estruturado);
-    fclose(arquivo_saida_python);
+    fclose(arquivo_saida);
     return 1;
 }
 
 int carregaGrafo(struct info_grafo *infos, int ***matrizADJ){
-    char nome_arquivo[100] = "Arquivos/Grafo.csv";
+    char nome_arquivo[100] = "Grafo.csv";
     FILE *arquivo = fopen(nome_arquivo, "r");
 
     while (arquivo == NULL && strcmp(nome_arquivo, "0") != 0){
@@ -327,35 +252,33 @@ int carregaGrafo(struct info_grafo *infos, int ***matrizADJ){
     if (arquivo == NULL || strcmp(nome_arquivo, "0") == 0) return 0;
 
     int qtVertices;
-    fscanf(arquivo, "%d\n", &qtVertices);
+    fscanf(arquivo, "Total de vértices lidos, %i\n", &qtVertices);
     infos->totalVertices = qtVertices;
 
     *matrizADJ = alocaMatriz(qtVertices);
-    if (matrizADJ == NULL){
+    if (*matrizADJ == NULL){
         printf("\n\u274C Erro ao alocar memória. Aperte enter para voltar. ");
         limpaBuffer();
         getchar();
     }
 
-    fscanf(arquivo, "%f\n", &infos->maxDE);
-    fscanf(arquivo, "%d, %f, %f, %f, %d, %f, %f, %f\n",&infos->maxDE_1.indice, &infos->maxDE_1.x, &infos->maxDE_1.y, &infos->maxDE_1.z, &infos->maxDE_2.indice, &infos->maxDE_2.x, &infos->maxDE_2.y, &infos->maxDE_2.z);
+    fscanf(arquivo, "Maior distância euclidiana, %f\n", &infos->maxDE);
+    fscanf(arquivo, "Par de maior distância euclidiana, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n",&infos->maxDE_1.indice, &infos->maxDE_1.x, &infos->maxDE_1.y, &infos->maxDE_1.z, &infos->maxDE_2.indice, &infos->maxDE_2.x, &infos->maxDE_2.y, &infos->maxDE_2.z);
 
-    fscanf(arquivo, "%f\n", &infos->minDE);
-    fscanf(arquivo, "%d, %f, %f, %f, %d, %f, %f, %f\n", &infos->minDE_1.indice, &infos->minDE_1.x, &infos->minDE_1.y, &infos->minDE_1.z, &infos->minDE_2.indice, &infos->minDE_2.x, &infos->minDE_2.y, &infos->minDE_2.z);
+    fscanf(arquivo, "Menor distância euclidiana, %f\n", &infos->minDE);
+    fscanf(arquivo, "Par de menor distância euclidiana, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->minDE_1.indice, &infos->minDE_1.x, &infos->minDE_1.y, &infos->minDE_1.z, &infos->minDE_2.indice, &infos->minDE_2.x, &infos->minDE_2.y, &infos->minDE_2.z);
 
-    fscanf(arquivo, "%f\n", &infos->maxDEN);
-    fscanf(arquivo, "%d, %f, %f, %f, %d, %f, %f, %f\n", &infos->maxDEN_1.indice, &infos->maxDEN_1.x, &infos->maxDEN_1.y, &infos->maxDEN_1.z, &infos->maxDEN_2.indice, &infos->maxDEN_2.x, &infos->maxDEN_2.y, &infos->maxDEN_2.z);
+    fscanf(arquivo, "Maior distância euclidiana normalizada, %f\n", &infos->maxDEN);
+    fscanf(arquivo, "Par de maior distância euclidiana normalizada, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->maxDEN_1.indice, &infos->maxDEN_1.x, &infos->maxDEN_1.y, &infos->maxDEN_1.z, &infos->maxDEN_2.indice, &infos->maxDEN_2.x, &infos->maxDEN_2.y, &infos->maxDEN_2.z);
 
-    fscanf(arquivo, "%f\n", &infos->minDEN);
-    fscanf(arquivo, "%d, %f, %f, %f, %d, %f, %f, %f\n", &infos->minDEN_1.indice, &infos->minDEN_1.x, &infos->minDEN_1.y, &infos->minDEN_1.z, &infos->minDEN_2.indice, &infos->minDEN_2.x, &infos->minDEN_2.y, &infos->minDEN_2.z);
+    fscanf(arquivo, "Menor distância euclidiana normalizada, %f\n", &infos->minDEN);
+    fscanf(arquivo, "Par de menor distância euclidiana normalizada, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->minDEN_1.indice, &infos->minDEN_1.x, &infos->minDEN_1.y, &infos->minDEN_1.z, &infos->minDEN_2.indice, &infos->minDEN_2.x, &infos->minDEN_2.y, &infos->minDEN_2.z);
 
-    // Leitura da matriz de adjacência
-    for (int i = 0; i < qtVertices; i++) {
-        for (int j = 0; j < qtVertices; j++) {
-            fscanf(arquivo, "%d", &(*matrizADJ)[i][j]);
-            if (j < qtVertices - 1) fscanf(arquivo, ",");  // ignora ","
-        }
-        fscanf(arquivo, "\n");
+    // Leitura das arestas
+    int lin, col;
+    while (fscanf(arquivo, "%i %i\n", &lin, &col) == 2){
+        (*matrizADJ)[lin][col] = 1;
+        (*matrizADJ)[col][lin] = 1;
     }
 
     fclose(arquivo);
@@ -392,11 +315,9 @@ int main(){
                 if(criaGrafo(vertices, qtVertices, &infos, &matrizADJ)) printf("\n\u2714 Grafo criado com sucesso.\n");
                 else break;
 
-
                 if(salvaGrafo(infos, qtVertices, matrizADJ, vertices)) printf("\n\u2714 Grafo e demais informações salvos nos arquivos de saída.\n");
                 else break;
 
-                limpaBuffer();
                 printf("\nAperte enter para voltar. ");
                 getchar();
             }
@@ -406,6 +327,8 @@ int main(){
 
                 if(carregaGrafo(&infos, &matrizADJ)) printf("\n\u2714 Grafo carregado com sucesso.\n");
                 else break;
+
+                qtVertices = infos.totalVertices;
 
                 printf("\nAperte enter para voltar. ");
                 limpaBuffer();
