@@ -172,46 +172,52 @@ int criaGrafo(No *vertices, int qtVertices, struct info_grafo *infos, int ***mat
     infos->maxDE = infos->maxDEN = -FLT_MAX;
 
     for (int i = 0; i < qtVertices; i++){
-        for (int j = i+1; j < qtVertices; j++){
-            aux = calculaDE(vertices[i], vertices[j]);
-            matrizDE[i][j] = aux; 
-            matrizDE[j][i] = aux;
+        for (int j = i; j < qtVertices; j++){
+            if (i == j) (*matrizADJ)[i][j] = 0;
+            else {
+                aux = calculaDE(vertices[i], vertices[j]);
+                matrizDE[i][j] = aux; 
+                matrizDE[j][i] = aux;
 
-            if (aux < infos->minDE) {
-                infos->minDE = aux;
-                infos->minDE_1 = vertices[i];
-                infos->minDE_2 = vertices[j];
-            }
-            if (aux > infos->maxDE) {
-                infos->maxDE = aux;
-                infos->maxDE_1 = vertices[i];
-                infos->maxDE_2 = vertices[j];
-            }
+                if (aux < infos->minDE) {
+                    infos->minDE = aux;
+                    infos->minDE_1 = vertices[i];
+                    infos->minDE_2 = vertices[j];
+                }
+                if (aux > infos->maxDE) {
+                    infos->maxDE = aux;
+                    infos->maxDE_1 = vertices[i];
+                    infos->maxDE_2 = vertices[j];
+                }
+            }    
         }
     }
 
     for (int i = 0; i < qtVertices; i++){
-        for (int j = i+1; j < qtVertices; j++){
-            aux = normalizaDE(matrizDE[i][j], infos->minDE, infos->maxDE);
-            if (aux <= 0.3) {
-                (*matrizADJ)[i][j] = 1;
-                (*matrizADJ)[j][i] = 1;
-            }
+        for (int j = i; j < qtVertices; j++){
+            if (i == j) (*matrizADJ)[i][j] = 0;
             else {
-                (*matrizADJ)[i][j] = 0;
-                (*matrizADJ)[j][i] = 0;
-            }
+                aux = normalizaDE(matrizDE[i][j], infos->minDE, infos->maxDE);
+                if (aux <= 0.3) {
+                    (*matrizADJ)[i][j] = 1;
+                    (*matrizADJ)[j][i] = 1;
+                }
+                else {
+                    (*matrizADJ)[i][j] = 0;
+                    (*matrizADJ)[j][i] = 0;
+                }
 
-            if (aux < infos->minDEN) {
-                infos->minDEN = aux;
-                infos->minDEN_1 = vertices[i];
-                infos->minDEN_2 = vertices[j];
-            }
-            if (aux > infos->maxDEN) {
-                infos->maxDEN = aux;
-                infos->maxDEN_1 = vertices[i];
-                infos->maxDEN_2 = vertices[j];
-            }
+                if (aux < infos->minDEN) {
+                    infos->minDEN = aux;
+                    infos->minDEN_1 = vertices[i];
+                    infos->minDEN_2 = vertices[j];
+                }
+                if (aux > infos->maxDEN) {
+                    infos->maxDEN = aux;
+                    infos->maxDEN_1 = vertices[i];
+                    infos->maxDEN_2 = vertices[j];
+                }
+            }    
         }
     }  
 
