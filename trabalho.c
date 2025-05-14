@@ -3,9 +3,6 @@
 #include<math.h>
 #include<float.h>
 #include<string.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
 
 typedef struct no{
     int indice;
@@ -19,6 +16,8 @@ typedef struct info_grafo{
     struct no minDE_1, minDE_2;
     struct no maxDEN_1, maxDEN_2;
     struct no minDEN_1, minDEN_2;
+    int *frequenciaComponentes; // Vetor de frequência dos componentes conexos (índice representa tamanho do componente)
+    int numComponentes; // Quantidade de elementos conexos
 }Info_grafo;
 
 // FUNCOES SECUNDÁRIAS
@@ -64,11 +63,11 @@ float normalizaDE(float x, float min, float max){
 }
 
 int **alocaMatriz(int tam){
-    int **matriz = malloc(sizeof(int*) * tam);
+    int **matriz = calloc(tam, sizeof(int*));
     if (matriz == NULL) return NULL;
 
     for (int i = 0; i < tam; i++){
-        matriz[i] = malloc(sizeof(int) * tam);
+        matriz[i] = calloc(tam,sizeof(int));
         if (matriz[i] == NULL){
             for (int j = 0; j < i; j++) free(matriz[j]);
             free(matriz);
@@ -85,7 +84,50 @@ void liberaMatriz(int **matriz, int tam){
     free(matriz);
 }
 
+void dfs(int v, int **matrizADJ, int *visitados, int totalVertices, int *tamanhoComponente) {
+    visitados[v] = 1;
+    (*tamanhoComponente)++;
+    
+    for (int i = 0; i < totalVertices; i++) if (matrizADJ[v][i] && !visitados[i]) dfs(i, matrizADJ, visitados, totalVertices, tamanhoComponente);
+}
+
+void contaComponentesConexos(int **matrizADJ, int totalVertices, Info_grafo *infos) {
+    int *visitados = calloc(totalVertices, sizeof(int)); // malloc iniciado em 0
+    if (visitados == NULL) {
+        printf("\n\u274C Erro ao alocar memória para vetor de visitados. Aperte enter para voltar. ");
+        limpaBuffer();
+        getchar();
+        return;
+    }
+    
+    // Vetor de frequência (índice representa tamanho do componente)
+    infos->frequenciaComponentes = calloc(totalVertices + 1, sizeof(int));
+    if (infos->frequenciaComponentes == NULL) {
+        printf("\n\u274C Erro ao alocar memória para frequência de componentes. Aperte enter para voltar. ");
+        limpaBuffer();
+        getchar();
+        free(visitados);
+        return;
+    }
+    
+    infos->numComponentes = 0;
+
+    // Percorre todos os vértices
+    for (int i = 0; i < totalVertices; i++) {
+        if (!visitados[i]) {
+            int tamanhoComponente = 0;
+            dfs(i, matrizADJ, visitados, totalVertices, &tamanhoComponente);
+            
+            // Incrementa a frequência para este tamanho de componente
+            infos->frequenciaComponentes[tamanhoComponente]++;
+            infos->numComponentes++;
+        }
+    }
+    
+    free(visitados);
+}
 // FUNCOES PRIMÁRIAS
+
 int carregaArquivo(struct no **vertices, int *qtAlocada, int *totalVertices, char nomeArquivo[100]){
     FILE *arquivo = fopen(nomeArquivo, "r");
 
@@ -192,6 +234,9 @@ int criaGrafo(No *vertices, int qtVertices, struct info_grafo *infos, int ***mat
             }    
         }
     }  
+    
+    // contar componentes conexos após criar o grafo
+    contaComponentesConexos(*matrizADJ, qtVertices, infos);
 
     return 1;
 }
@@ -227,10 +272,27 @@ int salvaGrafo(struct info_grafo infos, int qtVertices, int **matrizADJ, struct 
     fprintf(arquivo_saida, "Menor distância euclidiana normalizada, %f\n", infos.minDEN);  //e)
     fprintf(arquivo_saida, "Par de menor distância euclidiana normalizada, \"[%i](%.1f, %.1f, %.1f) - [%i](%.1f, %.1f, %.1f)\"\n", infos.minDEN_1.indice, infos.minDEN_1.x, infos.minDEN_1.y, infos.minDEN_1.z, infos.minDEN_2.indice, infos.minDEN_2.x, infos.minDEN_2.y, infos.minDEN_2.z);
     
+    fprintf(arquivo_saida, "Número total de componentes conexos, %i\n", infos.numComponentes);  //f)
+    fprintf(arquivo_saida, "Respectivos tamanhos dos componentes conexos, ");
+  
+    for (int i = 1; i <= infos.totalVertices; i++) {
+        if (infos.frequenciaComponentes[i] == 1) fprintf(arquivo_saida, "%i ", i);
+        else if (infos.frequenciaComponentes[i] > 1){
+            int j = 0;
+            while (j < infos.frequenciaComponentes[i]){
+                fprintf(arquivo_saida, "%i ", i);
+                j++;
+            }
+        } 
+    }
+
+    fprintf(arquivo_saida,"\n");
+
     // PRINTA ARESTAS
     for (int i = 0; i < qtVertices; i++) {
         for (int j = 0; j < qtVertices; j++) {
             if (matrizADJ[i][j] == 1 && i < j) fprintf(arquivo_saida, "%i %i\n", i, j); 
+            
         }
     }
     
@@ -252,8 +314,18 @@ int carregaGrafo(struct info_grafo *infos, int ***matrizADJ){
     if (arquivo == NULL || strcmp(nome_arquivo, "0") == 0) return 0;
 
     int qtVertices;
-    fscanf(arquivo, "Total de vértices lidos, %i\n", &qtVertices);
+    fscanf(arquivo, "Total de vértices lidos, %i\n", &qtVertices); 
     infos->totalVertices = qtVertices;
+
+    // Aloca o vetor de frequência dos componentes
+    infos->frequenciaComponentes = calloc(qtVertices + 1, sizeof(int));
+    if (infos->frequenciaComponentes == NULL) {
+        printf("\n\u274C Erro ao alocar memória para frequência de componentes. Aperte enter para voltar. ");
+        limpaBuffer();
+        getchar();
+        liberaMatriz(*matrizADJ, qtVertices);
+        return 0;
+    }
 
     *matrizADJ = alocaMatriz(qtVertices);
     if (*matrizADJ == NULL){
@@ -262,18 +334,30 @@ int carregaGrafo(struct info_grafo *infos, int ***matrizADJ){
         getchar();
     }
 
-    fscanf(arquivo, "Maior distância euclidiana, %f\n", &infos->maxDE);
+
+    fscanf(arquivo, "Maior distância euclidiana, %f\n", &infos->maxDE); 
     fscanf(arquivo, "Par de maior distância euclidiana, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n",&infos->maxDE_1.indice, &infos->maxDE_1.x, &infos->maxDE_1.y, &infos->maxDE_1.z, &infos->maxDE_2.indice, &infos->maxDE_2.x, &infos->maxDE_2.y, &infos->maxDE_2.z);
 
-    fscanf(arquivo, "Menor distância euclidiana, %f\n", &infos->minDE);
+    fscanf(arquivo, "Menor distância euclidiana, %f\n", &infos->minDE); 
     fscanf(arquivo, "Par de menor distância euclidiana, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->minDE_1.indice, &infos->minDE_1.x, &infos->minDE_1.y, &infos->minDE_1.z, &infos->minDE_2.indice, &infos->minDE_2.x, &infos->minDE_2.y, &infos->minDE_2.z);
 
-    fscanf(arquivo, "Maior distância euclidiana normalizada, %f\n", &infos->maxDEN);
+    fscanf(arquivo, "Maior distância euclidiana normalizada, %f\n", &infos->maxDEN); 
     fscanf(arquivo, "Par de maior distância euclidiana normalizada, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->maxDEN_1.indice, &infos->maxDEN_1.x, &infos->maxDEN_1.y, &infos->maxDEN_1.z, &infos->maxDEN_2.indice, &infos->maxDEN_2.x, &infos->maxDEN_2.y, &infos->maxDEN_2.z);
 
-    fscanf(arquivo, "Menor distância euclidiana normalizada, %f\n", &infos->minDEN);
+    fscanf(arquivo, "Menor distância euclidiana normalizada, %f\n", &infos->minDEN); 
     fscanf(arquivo, "Par de menor distância euclidiana normalizada, \"[%i](%f, %f, %f) - [%i](%f, %f, %f)\"\n", &infos->minDEN_1.indice, &infos->minDEN_1.x, &infos->minDEN_1.y, &infos->minDEN_1.z, &infos->minDEN_2.indice, &infos->minDEN_2.x, &infos->minDEN_2.y, &infos->minDEN_2.z);
 
+    // leitura dos tamanhos dos componentes
+    fscanf(arquivo, "Número total de componentes conexos, %i\n", &infos->numComponentes);  
+    fscanf(arquivo, "Respectivos tamanhos dos componentes conexos, ");
+  
+    int temp;
+    for (int i = 0; i < infos->numComponentes; i++) {
+        fscanf(arquivo, "%i ", &temp);
+        infos->frequenciaComponentes[temp]++;
+    }
+
+    fscanf(arquivo, "\n");
     // Leitura das arestas
     int lin, col;
     while (fscanf(arquivo, "%i %i\n", &lin, &col) == 2){
@@ -296,10 +380,11 @@ int main(){
         limpaTela();
         printf("1 - Criar grafo apartir de dataset de dados\n");
         printf("2 - Carregar grafo gerado\n");
-        printf("3 - Sair\n");
+        printf("3 - plota grafo 3D\n");
+        printf("4 - Sair\n");
     
         printf("Difite uma opção: ");
-        entrada(1, 3, &opcao);
+        entrada(1, 4, &opcao);
         limpaTela();
 
         switch (opcao){
@@ -327,7 +412,7 @@ int main(){
 
                 if(carregaGrafo(&infos, &matrizADJ)) printf("\n\u2714 Grafo carregado com sucesso.\n");
                 else break;
-
+                
                 qtVertices = infos.totalVertices;
 
                 printf("\nAperte enter para voltar. ");
@@ -335,6 +420,9 @@ int main(){
                 getchar();    
             break;
             case 3:
+                //funcoes para plotar grafo
+            break;
+            case 4:
                 continuar = 0;
             break;
         }
