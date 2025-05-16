@@ -369,6 +369,48 @@ int carregaGrafo(struct info_grafo *infos, int ***matrizADJ){
     return 1;
 }
 
+int converteCSVparaTXT() {
+    FILE *entrada = fopen("Grafo.csv", "r");
+    FILE *saida = fopen("Grafo_python.txt", "w");
+    
+    if (entrada == NULL || saida == NULL) {
+        printf("\n\u274C Erro ao abrir arquivos para conversão. Aperte enter para voltar.");
+        limpaBuffer();
+        getchar();
+        return 0;
+    }
+    
+    char linha[256];
+    int contador = 0;
+    
+    // Pula as primeiras 11 linhas de cabeçalho
+    while (contador < 11 && fgets(linha, sizeof(linha), entrada)) {
+        contador++;
+    }
+    
+    // Copia as linhas restantes (arestas do grafo) para o arquivo de saída
+    while (fgets(linha, sizeof(linha), entrada)) {
+        fputs(linha, saida);
+    }
+    
+    fclose(entrada);
+    fclose(saida);
+    return 1;
+}
+
+// Função para chamar o script Python
+void plotar_grafo_3d(const char *arquivo_txt) {
+    char comando[1024];
+    // Monta o comando para chamar o script Python
+    snprintf(comando, sizeof(comando),
+        "python3 displayGrafo.py %s", arquivo_txt);
+    // Executa o comando
+    int ret = system(comando);
+    if (ret != 0) {
+        fprintf(stderr, "Erro ao executar o script Python\n");
+    }
+}
+
 int main(){
     int qtVertices = 0, qtAlocada = 10, continuar = 1, opcao, **matrizADJ = NULL;
     //char nomeArquivo[100] = "grafoteste.csv";
@@ -378,12 +420,12 @@ int main(){
 
     while (continuar){
         limpaTela();
-        printf("1 - Criar grafo apartir de dataset de dados\n");
+        printf("1 - Criar grafo a partir de dataset de dados\n");
         printf("2 - Carregar grafo gerado\n");
-        printf("3 - plota grafo 3D\n");
+        printf("3 - Plotar grafo 3D\n");
         printf("4 - Sair\n");
     
-        printf("Difite uma opção: ");
+        printf("Digite uma opção: ");
         entrada(1, 4, &opcao);
         limpaTela();
 
@@ -420,7 +462,16 @@ int main(){
                 getchar();    
             break;
             case 3:
-                //funcoes para plotar grafo
+                converteCSVparaTXT();
+                const char *nomeArquivoTemp = "Grafo_python.txt";
+                system("python3 displayGrafo.py");
+                system("sleep 5");
+                remove("Grafo_python.txt");
+                remove("grafo3d.html");
+                printf("\n\u2714 Grafo plotado no navegador padrão da sua máquina!\n");
+                printf("\nAperte enter para voltar.");
+                limpaBuffer();
+                getchar();
             break;
             case 4:
                 continuar = 0;
