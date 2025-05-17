@@ -4,6 +4,7 @@
 #include<float.h>
 #include<string.h>
 
+// ESTRUTURAS DE DADOS
 typedef struct no{
     int indice;
     float x, y, z;
@@ -126,8 +127,8 @@ void contaComponentesConexos(int **matrizADJ, int totalVertices, Info_grafo *inf
     
     free(visitados);
 }
-// FUNCOES PRIMÁRIAS
 
+// FUNCOES PRIMÁRIAS
 int carregaArquivo(struct no **vertices, int *qtAlocada, int *totalVertices, char nomeArquivo[100]){
     FILE *arquivo = fopen(nomeArquivo, "r");
 
@@ -374,7 +375,7 @@ int converteCSVparaTXT() {
     FILE *saida = fopen("Grafo_python.txt", "w");
     
     if (entrada == NULL || saida == NULL) {
-        printf("\n\u274C Erro ao abrir arquivos para conversão. Aperte enter para voltar.");
+        printf("\n\u274C Erro ao abrir arquivos para conversão. Aperte enter para voltar. ");
         limpaBuffer();
         getchar();
         return 0;
@@ -413,7 +414,6 @@ void plotar_grafo_3d(const char *arquivo_txt) {
 
 int main(){
     int qtVertices = 0, qtAlocada = 10, continuar = 1, opcao, **matrizADJ = NULL;
-    //char nomeArquivo[100] = "grafoteste.csv";
     char nomeArquivo[100];
     No *vertices = malloc(sizeof(No) * qtAlocada);
     Info_grafo infos;
@@ -462,16 +462,17 @@ int main(){
                 getchar();    
             break;
             case 3:
-                converteCSVparaTXT();
-                const char *nomeArquivoTemp = "Grafo_python.txt";
-                system("python3 displayGrafo.py");
-                system("sleep 5");
-                remove("Grafo_python.txt");
-                remove("grafo3d.html");
-                printf("\n\u2714 Grafo plotado no navegador padrão da sua máquina!\n");
-                printf("\nAperte enter para voltar.");
-                limpaBuffer();
-                getchar();
+                if (converteCSVparaTXT()){
+                    const char *nomeArquivoTemp = "Grafo_python.txt";
+                    system("python3 displayGrafo.py");
+                    system("sleep 5");
+                    remove("Grafo_python.txt");
+                    remove("grafo3d.html");
+                    printf("\n\u2714 Grafo plotado no navegador padrão da sua máquina!\n");
+                    printf("Aperte enter para voltar.");
+                    limpaBuffer();
+                    getchar();
+                }else limpaBuffer();
             break;
             case 4:
                 continuar = 0;
