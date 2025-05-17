@@ -62,6 +62,9 @@ Estas funções representam os **processos centrais** do programa:
 - `carregaGrafo()`
     Lê um grafo salvo em arquivo .csv, reconstruindo as informações estruturais e a matriz de adjacência.
     ❗ obs: esta função só carrega um grafo se o grafo possuir a saída gerada por este sistema, use aqui o arquivo gerado Grafo.csv.
+- `pltar_grafo_3d()`
+    Recebe um arquivo .txt com uma lista de arestas e chama o script de Python para plotar o grafo em 3D a partir da linha de comando da máquina utilizando a função system(). Vale ressaltar que só funcionará se a sua máquina for Linux com Python instalado.
+
 
 ### 🔸 Funções Secundárias
 
@@ -90,8 +93,15 @@ Estas funções oferecem suporte essencial à lógica principal do sistema:
 
 - `liberaMatriz(int **matriz, int tam)`
     Libera a memória de uma matriz quadrada alocada dinamicamente.
-    
 
+- `converteCSVparaTXT()`
+   Abre um arquivo .csv e converte-o para um arquivo .txt para ser utilizado posteriormente para o plot do grafo em 3D 
+
+- `dfs(int v, int **matrizADJ, int *visitados, int totalVertices, int *tamanhoComponente)`
+    Realiza uma busca em profundidade a partir de um vértice inicial, marcando vértices visitados e calculando o tamanho do componente conexo.
+
+- `contaComponentesConexos(int **matrizADJ, int totalVertices, Info_grafo *infos)`
+    Identifica e conta todos os componentes conexos do grafo, registrando a frequência de componentes por tamanho.
 ## 📊 Exemplo de Execução
 
 1. Usuário entra com arquivo.csv contendo os vértices em cada linha;
@@ -109,7 +119,7 @@ Estas funções oferecem suporte essencial à lógica principal do sistema:
 ## 👨‍🏫 Envolvidos
 
 - Professor: GILMARIO BARBOSA DOS SANTOS
-- Estudante: Matheus Azevedo de Sá e [Rian Valcanaia](https://github.com/RianValcanaia)
+- Estudantes: Lucas Oliveira Macedo, Matheus Azevedo de Sá e [Rian Valcanaia](https://github.com/RianValcanaia)
 
 
 ## 📅 Curso
